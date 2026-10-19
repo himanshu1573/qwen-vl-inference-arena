@@ -1,0 +1,46 @@
+{
+  "config": {
+    "url": "http://127.0.0.1:8000",
+    "model": "Qwen/Qwen3-VL-4B-Instruct",
+    "mode": "mixed",
+    "users": 450,
+    "duration": 90,
+    "ramp_up": 20,
+    "max_tokens": 96,
+    "request_timeout": 180,
+    "min_pause": 0.2,
+    "max_pause": 1.2,
+    "label": "m-s512-450u",
+    "total_gpus": 1,
+    "serving": {
+      "gpu_type": "H100",
+      "tp": 1,
+      "replicas": 1,
+      "dtype": "bfloat16",
+      "prefix_cache": true,
+      "chunked_prefill": true,
+      "fast_boot": true,
+      "max_model_len": 8192,
+      "max_batch_tokens": 4096,
+      "max_seqs": 512,
+      "concurrent_inputs": 64,
+      "mm_max_pixels": 401408
+    }
+  },
+  "results": {
+    "total_requests": 10127,
+    "total_errors": 0,
+    "error_rate": 0.0,
+    "total_stream_chunks": 932522,
+    "ttft_p50_ms": 327.6593158952892,
+    "ttft_p95_ms": 917.5854159984738,
+    "ttft_p99_ms": 1361.2314101774246,
+    "itl_p50_ms": 25.80749803026648,
+    "itl_p95_ms": 32.190990546032,
+    "latency_p50_ms": 2781.208029948175,
+    "latency_p95_ms": 3567.9266329389066,
+    "per_request_tps_mean": 33.86727661810616,
+    "aggregate_stream_chunks_per_s": 10159.843848065831,
+    "requests_per_s": 110.33384590322017
+  }
+}

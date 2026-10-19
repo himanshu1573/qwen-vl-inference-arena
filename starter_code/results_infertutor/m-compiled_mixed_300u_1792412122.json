@@ -1,0 +1,46 @@
+{
+  "config": {
+    "url": "http://127.0.0.1:8000",
+    "model": "Qwen/Qwen3-VL-4B-Instruct",
+    "mode": "mixed",
+    "users": 300,
+    "duration": 90,
+    "ramp_up": 20,
+    "max_tokens": 96,
+    "request_timeout": 180,
+    "min_pause": 0.2,
+    "max_pause": 1.2,
+    "label": "m-compiled",
+    "total_gpus": 1,
+    "serving": {
+      "gpu_type": "H100",
+      "tp": 1,
+      "replicas": 1,
+      "dtype": "bfloat16",
+      "prefix_cache": true,
+      "chunked_prefill": true,
+      "fast_boot": false,
+      "max_model_len": 8192,
+      "max_batch_tokens": 4096,
+      "max_seqs": 256,
+      "concurrent_inputs": 64,
+      "mm_max_pixels": 401408
+    }
+  },
+  "results": {
+    "total_requests": 13153,
+    "total_errors": 0,
+    "error_rate": 0.0,
+    "total_stream_chunks": 1132352,
+    "ttft_p50_ms": 517.8474229760468,
+    "ttft_p95_ms": 831.6741001326591,
+    "ttft_p99_ms": 953.7830050103366,
+    "itl_p50_ms": 6.874904077014198,
+    "itl_p95_ms": 8.452443910452226,
+    "latency_p50_ms": 1128.4466739743948,
+    "latency_p95_ms": 1456.7089010961354,
+    "per_request_tps_mean": 82.58566475904513,
+    "aggregate_stream_chunks_per_s": 12477.901304239718,
+    "requests_per_s": 144.93888460007577
+  }
+}
