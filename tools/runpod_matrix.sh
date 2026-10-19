@@ -11,6 +11,7 @@
 #   tools/runpod_matrix.sh                       # run everything
 #   tools/runpod_matrix.sh m-base-50u m-nopc     # run only the named experiments
 #   tools/runpod_matrix.sh m-nopc-r2             # repeat a run under its own label (-r<N> suffix)
+#   tools/runpod_matrix.sh m-compiled-api2       # same run with N API server processes (-api<N>)
 #   KNEE_USERS=150 tools/runpod_matrix.sh m-nopc m-nocp
 #
 # vLLM logs: logs/vllm_<label>.log. Results: starter_code/results_infertutor/
@@ -82,6 +83,14 @@ experiment() {
 ORDER=(m-base-50u m-base-100u m-base-150u m-s64-100u m-s128-100u m-s128-150u m-nopc m-nocp m-s64-b8192 m-s32-b2048 m-px200k
   t-eager-100u t-compiled-100u t-compiled-200u)
 
+# Label suffixes: -api<N> adds N API server processes, -r<N> marks a repeat.
+resolve() {
+  local name=${1%-r[0-9]} api=""
+  case "$name" in *-api[0-9]) api=${name##*-api}; name=${name%-api[0-9]} ;; esac
+  experiment "$name" || return 1
+  if [ -n "$api" ]; then SERVER_ENV="$SERVER_ENV API_SERVER_COUNT=$api"; fi
+}
+
 SERVER_PID=""
 CURRENT_ENV=""
 
@@ -128,12 +137,12 @@ fi
 SELECTED=("$@")
 [ ${#SELECTED[@]} -eq 0 ] && SELECTED=("${ORDER[@]}")
 for label in "${SELECTED[@]}"; do
-  experiment "${label%-r[0-9]}" || { echo "Unknown experiment: $label"; exit 1; }
+  resolve "$label" || { echo "Unknown experiment: $label"; exit 1; }
 done
 
 mkdir -p logs
 for label in "${SELECTED[@]}"; do
-  experiment "${label%-r[0-9]}"
+  resolve "$label"
   echo
   echo "=============================== $label ==============================="
   if [ -z "$SERVER_PID" ] || ! kill -0 "$SERVER_PID" 2>/dev/null || [ "$SERVER_ENV" != "$CURRENT_ENV" ]; then

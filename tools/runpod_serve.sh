@@ -14,6 +14,7 @@
 #   MAX_NUM_SEQS=64 MAX_NUM_BATCHED_TOKENS=8192 tools/runpod_serve.sh
 #   FAST_BOOT=false tools/runpod_serve.sh          # compiled mode
 #   ENABLE_PREFIX_CACHING=false tools/runpod_serve.sh
+#   API_SERVER_COUNT=2 tools/runpod_serve.sh       # spread HTTP/tokenize/image preprocessing over processes
 #
 # Install once on the box (matches the Modal image pins):
 #   pip install "vllm==0.21.0" "qwen-vl-utils==0.0.14"
@@ -32,6 +33,7 @@ MAX_NUM_SEQS=${MAX_NUM_SEQS:-32}
 FAST_BOOT=${FAST_BOOT:-true}
 MM_MAX_PIXELS=${MM_MAX_PIXELS:-401408}   # 512*28*28
 PORT=${PORT:-8000}
+API_SERVER_COUNT=${API_SERVER_COUNT:-1}
 
 cmd=(vllm serve "$MODEL_NAME"
   --served-model-name "$MODEL_NAME"
@@ -50,6 +52,7 @@ cmd=(vllm serve "$MODEL_NAME"
 if [ "$FAST_BOOT" = "true" ]; then cmd+=(--enforce-eager); else cmd+=(--no-enforce-eager); fi
 [ "$ENABLE_PREFIX_CACHING" = "true" ] && cmd+=(--enable-prefix-caching)
 [ "$ENABLE_CHUNKED_PREFILL" = "true" ] && cmd+=(--enable-chunked-prefill)
+[ "$API_SERVER_COUNT" != "1" ] && cmd+=(--api-server-count "$API_SERVER_COUNT")
 
 echo "Starting vLLM: ${cmd[*]}"
 exec "${cmd[@]}"
