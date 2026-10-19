@@ -22,6 +22,7 @@ DURATION=${DURATION:-90}
 RAMP=${RAMP:-20}
 MAX_TOKENS=${MAX_TOKENS:-96}
 KNEE_USERS=${KNEE_USERS:-100}   # update after the user sweep (runs 1-3)
+BASE_SEQS=${BASE_SEQS:-32}      # max_num_seqs for the toggle runs; update after the seqs sweep
 GPU_TYPE=${GPU_TYPE:-H100}      # stamped into the result JSON only
 PORT=${PORT:-8000}
 STARTUP_TIMEOUT=${STARTUP_TIMEOUT:-900}
@@ -38,19 +39,25 @@ experiment() {
     m-base-50u)   SERVER_ENV="";  ARGS="--mode mixed --users 50" ;;
     m-base-100u)  SERVER_ENV="";  ARGS="--mode mixed --users 100" ;;
     m-base-150u)  SERVER_ENV="";  ARGS="--mode mixed --users 150" ;;
+    # max_num_seqs sweep: at 100 users with seq32, TTFT rose 5x while ITL held, so requests queue
+    m-s64-100u)   SERVER_ENV="MAX_NUM_SEQS=64";   ARGS="--mode mixed --users 100 --max-seqs 64" ;;
+    m-s128-100u)  SERVER_ENV="MAX_NUM_SEQS=128";  ARGS="--mode mixed --users 100 --max-seqs 128" ;;
+    m-s128-150u)  SERVER_ENV="MAX_NUM_SEQS=128";  ARGS="--mode mixed --users 150 --max-seqs 128" ;;
     # 4-5: feature toggles at the knee
-    m-nopc)       SERVER_ENV="ENABLE_PREFIX_CACHING=false"
-                  ARGS="--mode mixed --users $KNEE_USERS --no-prefix-cache" ;;
-    m-nocp)       SERVER_ENV="ENABLE_CHUNKED_PREFILL=false"
-                  ARGS="--mode mixed --users $KNEE_USERS --no-chunked-prefill" ;;
+    m-nopc)       SERVER_ENV="MAX_NUM_SEQS=$BASE_SEQS ENABLE_PREFIX_CACHING=false"
+                  ARGS="--mode mixed --users $KNEE_USERS --max-seqs $BASE_SEQS --no-prefix-cache" ;;
+    m-nocp)       SERVER_ENV="MAX_NUM_SEQS=$BASE_SEQS ENABLE_CHUNKED_PREFILL=false"
+                  ARGS="--mode mixed --users $KNEE_USERS --max-seqs $BASE_SEQS --no-chunked-prefill" ;;
     # 6-7: batch knobs
     m-s64-b8192)  SERVER_ENV="MAX_NUM_SEQS=64 MAX_NUM_BATCHED_TOKENS=8192"
                   ARGS="--mode mixed --users $KNEE_USERS --max-seqs 64 --max-batch-tokens 8192" ;;
-    m-s32-b2048)  SERVER_ENV="MAX_NUM_BATCHED_TOKENS=2048"
-                  ARGS="--mode mixed --users $KNEE_USERS --max-batch-tokens 2048" ;;
+    m-s32-b2048)  SERVER_ENV="MAX_NUM_SEQS=$BASE_SEQS MAX_NUM_BATCHED_TOKENS=2048"
+                  ARGS="--mode mixed --users $KNEE_USERS --max-seqs $BASE_SEQS --max-batch-tokens 2048" ;;
+    m-b8192)      SERVER_ENV="MAX_NUM_SEQS=$BASE_SEQS MAX_NUM_BATCHED_TOKENS=8192"
+                  ARGS="--mode mixed --users $KNEE_USERS --max-seqs $BASE_SEQS --max-batch-tokens 8192" ;;
     # 8: image pixel budget
-    m-px200k)     SERVER_ENV="MM_MAX_PIXELS=200704"
-                  ARGS="--mode mixed --users $KNEE_USERS --mm-max-pixels 200704" ;;
+    m-px200k)     SERVER_ENV="MAX_NUM_SEQS=$BASE_SEQS MM_MAX_PIXELS=200704"
+                  ARGS="--mode mixed --users $KNEE_USERS --max-seqs $BASE_SEQS --mm-max-pixels 200704" ;;
     # text track (optional)
     t-eager-100u)     SERVER_ENV="";  ARGS="--mode text --users 100" ;;
     t-compiled-100u)  SERVER_ENV="FAST_BOOT=false";  ARGS="--mode text --users 100 --no-fast-boot" ;;
@@ -58,7 +65,7 @@ experiment() {
     *) return 1 ;;
   esac
 }
-ORDER=(m-base-50u m-base-100u m-base-150u m-nopc m-nocp m-s64-b8192 m-s32-b2048 m-px200k
+ORDER=(m-base-50u m-base-100u m-base-150u m-s64-100u m-s128-100u m-s128-150u m-nopc m-nocp m-s64-b8192 m-s32-b2048 m-px200k
   t-eager-100u t-compiled-100u t-compiled-200u)
 
 SERVER_PID=""
@@ -126,4 +133,8 @@ done
 
 echo
 echo "Done. Results:"
-python tools/results_table.py starter_code/results_infertutor || true
+if [ -d starter_code/results_infertutor ]; then
+  python tools/results_table.py starter_code/results_infertutor --sort score
+else
+  echo "No result JSONs yet."
+fi
