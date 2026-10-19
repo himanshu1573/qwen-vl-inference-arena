@@ -55,6 +55,10 @@ experiment() {
                   ARGS="--mode mixed --users $KNEE_USERS --max-seqs $BASE_SEQS --max-batch-tokens 2048" ;;
     m-b8192)      SERVER_ENV="MAX_NUM_SEQS=$BASE_SEQS MAX_NUM_BATCHED_TOKENS=8192"
                   ARGS="--mode mixed --users $KNEE_USERS --max-seqs $BASE_SEQS --max-batch-tokens 8192" ;;
+    # compiled mode (CUDA graphs) at the knee: ITL held at ~25 ms from 100 to 300 users, so step
+    # time looks like fixed per-step overhead rather than batch size
+    m-compiled)   SERVER_ENV="MAX_NUM_SEQS=$BASE_SEQS FAST_BOOT=false"
+                  ARGS="--mode mixed --users $KNEE_USERS --max-seqs $BASE_SEQS --no-fast-boot" ;;
     # 8: image pixel budget
     m-px200k)     SERVER_ENV="MAX_NUM_SEQS=$BASE_SEQS MM_MAX_PIXELS=200704"
                   ARGS="--mode mixed --users $KNEE_USERS --max-seqs $BASE_SEQS --mm-max-pixels 200704" ;;
