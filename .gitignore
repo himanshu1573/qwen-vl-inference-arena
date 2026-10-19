@@ -5,3 +5,4 @@ __pycache__/
 venv/
 modal_infertutor_app_generated.py
 .pytest_cache/
+logs/
