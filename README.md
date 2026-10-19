@@ -1,9 +1,6 @@
 # qwen-vl-inference-arena
 
-Capstone submission for the Vizuara Inference Engineering workshop (InferTutor Arena).
-
-My implementation of the Vizuara Inference Engineering capstone:
-serve `Qwen/Qwen3-VL-4B-Instruct` with vLLM, load test it, tune it, report it.
+InferTutor Arena: serve `Qwen/Qwen3-VL-4B-Instruct` with vLLM, load test it, tune it, report it.
 The tooling supports Modal and rented GPUs; the submitted runs used 1× H100 SXM on RunPod.
 
 ## Result
