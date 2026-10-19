@@ -18,6 +18,11 @@ The tooling supports Modal and rented GPUs; the submitted runs used 1× H100 SXM
 | + CUDA graphs (compiled mode) | 0.53B | the single API server pinned at 100% CPU |
 | + `--api-server-count 2` | **4.68B** | the load generator itself (~99% CPU) |
 
+![Final run: live GPU stats on top, load test below](media/demo.gif)
+
+The final run as a video: [`media/demo.mp4`](media/demo.mp4). Illustrated 9-page report:
+[`docs/report/InferTutor_Arena_Himanshu_Prajapati.pdf`](docs/report/InferTutor_Arena_Himanshu_Prajapati.pdf).
+
 21 runs in about 80 minutes for about $5.50. Details: `REPORT.md` (one page) and
 `EXPERIMENTS.md` (every run, with the hypothesis written before it). The load tester ran on the
 GPU box, so TTFT has no internet RTT and the score is not comparable to the Modal reference.
