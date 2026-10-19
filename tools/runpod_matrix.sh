@@ -62,6 +62,12 @@ experiment() {
     t-eager-100u)     SERVER_ENV="";  ARGS="--mode text --users 100" ;;
     t-compiled-100u)  SERVER_ENV="FAST_BOOT=false";  ARGS="--mode text --users 100 --no-fast-boot" ;;
     t-compiled-200u)  SERVER_ENV="FAST_BOOT=false";  ARGS="--mode text --users 200 --no-fast-boot" ;;
+    # any other seqs/users point, e.g. m-s256-300u
+    m-s*-*u)
+      local seqs=${1#m-s}; seqs=${seqs%%-*}
+      local users=${1##*-}; users=${users%u}
+      case "$seqs$users" in ''|*[!0-9]*) return 1 ;; esac
+      SERVER_ENV="MAX_NUM_SEQS=$seqs";  ARGS="--mode mixed --users $users --max-seqs $seqs" ;;
     *) return 1 ;;
   esac
 }
