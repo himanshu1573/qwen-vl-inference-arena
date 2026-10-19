@@ -10,6 +10,7 @@
 # Usage (inside the repo, venv active, nothing else on $PORT):
 #   tools/runpod_matrix.sh                       # run everything
 #   tools/runpod_matrix.sh m-base-50u m-nopc     # run only the named experiments
+#   tools/runpod_matrix.sh m-nopc-r2             # repeat a run under its own label (-r<N> suffix)
 #   KNEE_USERS=150 tools/runpod_matrix.sh m-nopc m-nocp
 #
 # vLLM logs: logs/vllm_<label>.log. Results: starter_code/results_infertutor/
@@ -59,6 +60,9 @@ experiment() {
     # time looks like fixed per-step overhead rather than batch size
     m-compiled)   SERVER_ENV="MAX_NUM_SEQS=$BASE_SEQS FAST_BOOT=false"
                   ARGS="--mode mixed --users $KNEE_USERS --max-seqs $BASE_SEQS --no-fast-boot" ;;
+    # compiled cut ITL 3x but raised req/s 68%, so prefills queued (TTFT p95 832 ms); widen prefill budget
+    m-compiled-b8192)  SERVER_ENV="MAX_NUM_SEQS=$BASE_SEQS FAST_BOOT=false MAX_NUM_BATCHED_TOKENS=8192"
+                  ARGS="--mode mixed --users $KNEE_USERS --max-seqs $BASE_SEQS --no-fast-boot --max-batch-tokens 8192" ;;
     # 8: image pixel budget
     m-px200k)     SERVER_ENV="MAX_NUM_SEQS=$BASE_SEQS MM_MAX_PIXELS=200704"
                   ARGS="--mode mixed --users $KNEE_USERS --max-seqs $BASE_SEQS --mm-max-pixels 200704" ;;
@@ -124,12 +128,12 @@ fi
 SELECTED=("$@")
 [ ${#SELECTED[@]} -eq 0 ] && SELECTED=("${ORDER[@]}")
 for label in "${SELECTED[@]}"; do
-  experiment "$label" || { echo "Unknown experiment: $label"; exit 1; }
+  experiment "${label%-r[0-9]}" || { echo "Unknown experiment: $label"; exit 1; }
 done
 
 mkdir -p logs
 for label in "${SELECTED[@]}"; do
-  experiment "$label"
+  experiment "${label%-r[0-9]}"
   echo
   echo "=============================== $label ==============================="
   if [ -z "$SERVER_PID" ] || ! kill -0 "$SERVER_PID" 2>/dev/null || [ "$SERVER_ENV" != "$CURRENT_ENV" ]; then
